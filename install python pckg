@@ -1,0 +1,22 @@
+Install required Python packages:
+
+bash
+Copy code
+pip install zoomus python-dotenv
+Set up API keys:
+
+Create a .env file in the root directory with your API credentials:
+makefile
+Copy code
+ZOOM_API_KEY=your_api_key_here
+ZOOM_API_SECRET=your_api_secret_here
+Usage
+Run the bot script:
+
+bash
+Copy code
+python Botzillah.py
+Follow the on-screen prompts to enter meeting details or customize the script as needed.
+
+Contributing
+Contributions are welcome! Fork the repository and submit a pull request with your enhancements
