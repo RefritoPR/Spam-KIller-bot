@@ -1,0 +1,94 @@
+import zoom
+import time
+import os
+import getpass
+from dotenv import load_dotenv
+
+# Function to securely prompt for input
+def get_secure_input(prompt):
+    return getpass.getpass(prompt)
+
+# Load API key and secret from environment variables or configuration file
+def load_api_keys():
+    # Example of loading API keys from environment variables
+    # api_key = os.getenv("ZOOM_API_KEY")
+    # api_secret = os.getenv("ZOOM_API_SECRET")
+    
+    # Example of loading API keys from a configuration file
+    # with open('config.txt', 'r') as f:
+    #     api_key = f.readline().strip()
+    #     api_secret = f.readline().strip()
+
+    # For demonstration purposes, use secure input:
+    api_key = get_secure_input("Enter Zoom API Key: ")
+    api_secret = get_secure_input("Enter Zoom API Secret: ")
+    return api_key, api_secret
+
+# Initialize the Zoom client
+def initialize_zoom_client(api_key, api_secret):
+    client = zoom.ZoomClient(api_key=api_key, api_secret=api_secret)
+    return client
+
+class Botzillah:
+    def __init__(self, api_key, api_secret):
+        self.client = initialize_zoom_client(api_key, api_secret)
+        self.blacklist = []  # Add inappropriate names or usernames here
+        self.spam_threshold = 3
+        self.spam_counts = {}
+        self.last_entry_times = {}
+        self.banned_users = {}
+        self.inappropriate_words = [
+            "satan", "satanic", "pedo", "perv", "pervert", "no limits",
+            "pedophile", "cannibalism", "bestiality", "scat", "CP",
+            "child pornography", "satanism", "devil worship"
+        ]
+
+    def join_meeting(self):
+        # Example: Auto-join using Personal Meeting ID (PMI)
+        self.meeting = self.client.meeting.join(name="Botzillah")
+
+    def monitor_chat(self):
+        while True:
+            messages = self.meeting.get_chat_messages()
+            for message in messages:
+                sender = message.get('sender_name').lower()
+                text = message.get('text').lower()
+
+                # Check for inappropriate usernames or spam
+                if sender in self.blacklist or self.is_inappropriate(sender, text):
+                    self.remove_user(sender)
+                else:
+                    self.spam_counts[sender] = self.spam_counts.get(sender, 0) + 1
+
+            time.sleep(1)
+
+    def is_inappropriate(self, sender, text):
+        # Increment spam count and check threshold
+        if sender in self.spam_counts and self.spam_counts[sender] >= self.spam_threshold:
+            return True
+        # Check for inappropriate content in username or text
+        if any(word in sender for word in self.inappropriate_words) or \
+           any(word in text for word in self.inappropriate_words):
+            return True
+        # Check for frequent re-entry
+        if sender in self.last_entry_times and time.time() - self.last_entry_times[sender] < 60:
+            return True
+        self.last_entry_times[sender] = time.time()
+        return False
+
+    def remove_user(self, sender):
+        self.meeting.remove_user(sender)
+        self.blacklist.append(sender)
+        print(f"User {sender} removed and added to blacklist.")
+
+    def run(self):
+        self.join_meeting()
+        self.monitor_chat()
+
+if __name__ == "__main__":
+    # Load API keys
+    api_key, api_secret = load_api_keys()
+    
+    # Initialize and run the bot
+    botzillah = Botzillah(api_key, api_secret)
+    botzillah.run()
